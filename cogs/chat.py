@@ -399,7 +399,7 @@ class ChatCog(commands.Cog):
             return
 
         if not reply:
-            if kind == "direct" and self.bot.failure_backoff.should_notify():
+            if kind == "direct":
                 try:
                     await message.channel.send(
                         self._failure_reply(classification, message.author.id),
