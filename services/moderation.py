@@ -150,6 +150,11 @@ _DOXX = [
     r"\bcredit\s+card\b", r"\bcvv\b",
 ]
 
+_DIRECT = [
+    r"\b(tu|tum|tera|teri|tere|tujhe|tumhe|tumhara|tumhari|you|your|you'?re)\b",
+    r"\b(abe|abey|oye|oy|sale|saale)\b",
+]
+
 _LECTURE = [
     r"gaali\s+(mat|na|nahi|nahin)\b", r"sambhal\b", r"shant\s+ho",
     r"calm\s+down", r"be\s+polite", r"keep\s+it\s+civil", r"behave\s+kar",
@@ -177,6 +182,8 @@ _FAMILY_RE = _compile(_FAMILY)
 _FAMILY_WORDS_RE = _compile(_FAMILY_WORDS)
 _SEXUAL_RE = _compile(_SEXUAL)
 _DOXX_RE = _compile(_DOXX)
+_DIRECT_RE = re.compile("|".join(_DIRECT), re.IGNORECASE)
+_LAUGH_RE = re.compile(r"(haha+|hehe+|hihi+|lol|lmao|lmfao|rofl|xd|😂|🤣|😹)", re.IGNORECASE)
 _LECTURE_RE = _compile(_LECTURE)
 
 _WORD_RE = re.compile(r"[a-zA-Z']+")
@@ -276,6 +283,10 @@ def classify(text: str) -> Classification:
         or (_any(_HELP_WEAK_RE, normalized) and "?" in normalized)
     )
     greeting = _any(_GREETING_RE, normalized)
+    directed_abuse = has_profanity(normalized) and (
+        _DIRECT_RE.search(normalized) is not None
+        or len(_WORD_RE.findall(normalized)) <= 2
+    )
 
     blocked = False
     block_reason = ""
@@ -297,15 +308,11 @@ def classify(text: str) -> Classification:
         level = Level.BANTER
     elif help_intent:
         level = Level.HELP
-    elif has_profanity(normalized):
-        level = Level.BANTER
+    elif directed_abuse:
+        level = Level.TEASE if _LAUGH_RE.search(normalized) else Level.BANTER
     elif greeting:
         level = Level.GREETING
-    elif (
-        _any(_TEASE_RE, normalized)
-        or normalized.count("!") >= 2
-        or normalized.count("?") >= 2
-    ):
+    elif _any(_TEASE_RE, normalized):
         level = Level.TEASE
     else:
         level = Level.NORMAL
