@@ -22,7 +22,7 @@ _MILD_PROFANITY = {
     "bc", "bkl", "bsdk", "harami", "kutta", "kutte", "kamina", "saala", "sala",
     "suar", "gadha", "ullu", "pagal", "idiot", "stupid", "dumb", "nub",
     "noob", "lame", "trash", "garbage", "fuck", "fucking", "shit", "damn",
-    "ass", "bastard", "dick", "prick", "moron",
+    "ass", "bastard", "dick", "prick", "moron", "lodu", "lawde", "laude",
 }
 
 _ROAST_REQUEST = [
@@ -143,6 +143,13 @@ _DOXX = [
     r"\bcredit\s+card\b", r"\bcvv\b",
 ]
 
+_LECTURE = [
+    r"gaali\s+(mat|na|nahi|nahin)\b", r"sambhal\b", r"shant\s+ho",
+    r"calm\s+down", r"be\s+polite", r"keep\s+it\s+civil", r"behave\s+kar",
+    r"insult\s+(mat|na|nahi)\b", r"tameez\s+se", r"achhe\s+se\s+baat",
+    r"let'?s\s+keep\s+it", r"no\s+need\s+to", r"bakchodi\s+mat",
+]
+
 
 def _compile(patterns: Sequence[str]) -> list[re.Pattern]:
     return [re.compile(p, re.IGNORECASE) for p in patterns]
@@ -162,6 +169,7 @@ _HATE_RE = _compile(_HATE)
 _FAMILY_RE = _compile(_FAMILY)
 _SEXUAL_RE = _compile(_SEXUAL)
 _DOXX_RE = _compile(_DOXX)
+_LECTURE_RE = _compile(_LECTURE)
 
 _WORD_RE = re.compile(r"[a-zA-Z']+")
 _HINDI_RE = re.compile(r"[\u0900-\u097F]")
@@ -193,19 +201,30 @@ def has_profanity(text: str) -> bool:
     return _any(_ABUSE_RE, text)
 
 
-_GAALI_FALLBACKS = [
-    "chutiye", "bkl", "gandu", "harami", "lodu", "nikamme", "kamini",
+_GAALI_LINES = [
+    "chutiye, apni aukaat mein reh, yahan teri bakchodi koi nahi sun raha 💀",
+    "bkl, itni himmat? pehle ja ke apna dimaag dhoo, phir aana 😭",
+    "gandu, poori simp energy aa rahi teri, thoda to self-respect rakh 😂",
+    "harami, tera logic bhi utna hi ghatiya hai jitna tera attitude 🔥",
+    "lodu, aisi baatein karne se pehle mirror dekh liya kar 😏",
+    "chutiye, tu cool banne chala tha aur khud hi clown nikla 🤡",
+    "kamina, teri aukaat tere keyboard tak hi hai, samjha? 💀",
+    "gandu, apna gyaan apne paas rakh, yahan koi nahi maang raha 😹",
+    "bkl, itna faltu bakwas karne se pehle apne marks dekh liyo 😂",
+    "harami, teri baaton se hi lag raha tu kitna nikamma hai 💩",
 ]
 
 
+def is_weak_reply(text: str) -> bool:
+    if not text or not has_profanity(text):
+        return True
+    return _any(_LECTURE_RE, text)
+
+
 def ensure_profanity(reply: str, *, lang: str = "hinglish") -> str:
-    if reply and has_profanity(reply):
+    if reply and not is_weak_reply(reply):
         return reply
-    gaali = random.choice(_GAALI_FALLBACKS)
-    base = (reply or "").strip()
-    if not base:
-        return f"{gaali}, itna bhi nahi bol paaya? wah 😭"
-    return f"{gaali}, {base}"
+    return random.choice(_GAALI_LINES)
 
 
 @dataclass

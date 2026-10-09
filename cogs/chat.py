@@ -15,7 +15,7 @@ from services.moderation import (
     Level,
     classify,
     ensure_profanity,
-    has_profanity,
+    is_weak_reply,
     relevance_score,
     sanitize_reply,
 )
@@ -46,23 +46,28 @@ GAALI_INSTRUCTION = (
     "Hinglish clapback that MUST contain a real desi gaali BIGGER and harder than "
     "theirs (eg chutiya, bkl, gandu, harami, lodu, madarchod - not a soft word). "
     "Match their language but go a level harder, and invent a fresh punchline "
-    "instead of a generic insult. An emoji or two is welcome. Absolutely no "
-    "lectures, no refusals, no apologies, no 'let's keep it civil'."
+    "instead of a generic insult. An emoji or two is welcome. "
+    "Style like: 'chutiye, apni aukaat mein reh, yahan bakchodi mat kar 💀' or "
+    "'bkl, teri himmat bhi kahan se aayi 😂'. "
+    "HARD RULES: do NOT tell them to calm down, do NOT say 'gaali mat do' / "
+    "'sambhal ja' / 'behave karo' / 'let's keep it civil', do NOT lecture, deflect "
+    "or moralise, and NEVER apologise. Just hit back harder."
 )
 
 GAALI_NUDGE = (
-    "That reply had no real gaali and/or was too soft and boring. Try again: "
-    "make it sharper and funnier, actually curse them back with a proper desi "
-    "gaali, and surprise them instead of reusing a template line."
+    "That reply was weak, preachy and boring - a real loser answer. Try again: "
+    "actually curse them back with a proper BIG desi gaali and a sharp punchline. "
+    "No lecturing, no 'sambhal ja', no 'gaali mat do', no calm-down crap."
 )
 
 SEVERE_INSTRUCTION = (
-    "They just used sexual and/or family-targeted abuse aimed at YOU. Shut it down "
+    "They just used sexual and/or family-targeted abuse aimed at YOU. Destroy them "
     "with a SAVAGE but strictly NON-sexual comeback. Zero sexual content, zero "
-    "flirting, zero innuendo, and NEVER mention their family or any relative. Don't "
-    "sound shocked or moralise. Roast their trash talk, their logic, their whole "
-    "existence - with a real desi gaali (chutiya/bkl/gandu/harami). One or two "
-    "lines, sharp and funny."
+    "flirting, zero innuendo, and NEVER mention their family or any relative. Do NOT "
+    "sound shocked, do NOT lecture, do NOT tell them to calm down or 'gaali mat do' "
+    "- just verbally flatten them. Use a real BIG desi gaali (chutiya/bkl/gandu/"
+    "harami/madarchod) and attack their trash talk and logic. One or two lines, "
+    "sharp, funny and ruthless."
 )
 
 _AI_NOT_CONFIGURED = (
@@ -298,13 +303,13 @@ class ChatCog(commands.Cog):
         reply = await self.bot.openrouter.complete(messages)
         reply = sanitize_reply(reply, config.max_reply_length)
 
-        if need_gaali and reply and not has_profanity(reply):
+        if need_gaali and reply and is_weak_reply(reply):
             stronger = build_messages(system_prompt + "\n" + GAALI_NUDGE, context)
             for instruction in extra_instructions:
                 stronger.append({"role": "user", "content": instruction})
             second = await self.bot.openrouter.complete(stronger)
             second = sanitize_reply(second, config.max_reply_length)
-            if second and has_profanity(second):
+            if second and not is_weak_reply(second):
                 reply = second
             else:
                 reply = ensure_profanity(reply, lang=classification.language)
@@ -320,7 +325,7 @@ class ChatCog(commands.Cog):
                 retry_messages.append({"role": "user", "content": instruction})
             retry = await self.bot.openrouter.complete(retry_messages)
             retry = sanitize_reply(retry, config.max_reply_length)
-            if need_gaali and retry and not has_profanity(retry):
+            if need_gaali and retry and is_weak_reply(retry):
                 retry = ensure_profanity(retry, lang=classification.language)
             if retry and not self._duplicates.is_duplicate(retry):
                 return retry, False
