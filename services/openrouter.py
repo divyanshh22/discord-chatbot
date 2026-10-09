@@ -60,6 +60,44 @@ class OpenRouterClient:
     def budget_available(self) -> bool:
         return self.budget_remaining > 0
 
+    def _headers(self, api_key: str) -> dict[str, str]:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "X-Title": self._config.openrouter_app_name,
+        }
+        if self._config.openrouter_app_url:
+            headers["HTTP-Referer"] = self._config.openrouter_app_url
+        return headers
+
+    def _attempts(self) -> list[tuple[str, str, str]]:
+        """Ordered (base_url, api_key, model) attempts across providers."""
+        attempts: list[tuple[str, str, str]] = []
+        primary_models = [
+            self._config.openrouter_model,
+            *self._config.openrouter_fallback_models,
+        ]
+        for model in primary_models:
+            if model:
+                attempts.append(
+                    (
+                        self._config.openrouter_base_url,
+                        self._config.openrouter_api_key,
+                        model,
+                    )
+                )
+        if self._config.secondary_configured:
+            for model in self._config.openrouter_secondary_models:
+                if model:
+                    attempts.append(
+                        (
+                            self._config.openrouter_secondary_base_url,
+                            self._config.openrouter_secondary_api_key,
+                            model,
+                        )
+                    )
+        return attempts
+
     async def complete(
         self,
         messages: Sequence[dict[str, str]],
@@ -71,8 +109,10 @@ class OpenRouterClient:
             raise BudgetExceeded(
                 "Daily OpenRouter request budget reached; skipping AI request."
             )
-        if not self._config.openrouter_api_key:
-            raise OpenRouterError("OpenRouter API key is not configured.")
+
+        attempts = self._attempts()
+        if not attempts:
+            raise OpenRouterError("No AI model or provider is configured.")
 
         await self.start()
         assert self._session is not None
@@ -88,43 +128,42 @@ class OpenRouterClient:
             "reasoning": {"enabled": False},
         }
 
-        headers = {
-            "Authorization": f"Bearer {self._config.openrouter_api_key}",
-            "Content-Type": "application/json",
-            "X-Title": self._config.openrouter_app_name,
-        }
-        if self._config.openrouter_app_url:
-            headers["HTTP-Referer"] = self._config.openrouter_app_url
-
-        url = f"{self._config.openrouter_base_url.rstrip('/')}/chat/completions"
-
-        models = [
-            self._config.openrouter_model,
-            *self._config.openrouter_fallback_models,
-        ]
-
         last_error: Exception | None = None
-        for index, model in enumerate(models):
+        total = len(attempts)
+        for index, (base_url, api_key, model) in enumerate(attempts):
+            has_fallback = index + 1 < total
+            if not api_key:
+                last_error = OpenRouterError(
+                    "API key is not configured for the selected provider."
+                )
+                continue
+
+            url = f"{base_url.rstrip('/')}/chat/completions"
             try:
                 return await self._request_model(
                     url,
-                    headers,
+                    self._headers(api_key),
                     payload,
                     model,
-                    has_fallback=index + 1 < len(models),
+                    has_fallback=has_fallback,
                 )
-            except AuthenticationError:
-                raise
-            except OpenRouterError as exc:
+            except AuthenticationError as exc:
                 last_error = exc
-                nxt = models[index + 1] if index + 1 < len(models) else None
-                if nxt is None:
-                    break
+                if not has_fallback:
+                    raise
                 log.warning(
-                    "Model %s failed (%s); trying fallback model %s.",
+                    "Auth failed for model %s (%s); trying next provider/model.",
                     model,
                     exc,
-                    nxt,
+                )
+            except OpenRouterError as exc:
+                last_error = exc
+                if not has_fallback:
+                    break
+                log.warning(
+                    "Model %s failed (%s); trying next provider/model.",
+                    model,
+                    exc,
                 )
 
         raise last_error or OpenRouterError("OpenRouter request failed.")

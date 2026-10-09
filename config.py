@@ -68,20 +68,20 @@ class Config:
     openrouter_api_key: str = field(default_factory=lambda: _str("OPENROUTER_API_KEY"))
     openrouter_model: str = field(
         default_factory=lambda: _str(
-            "OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free"
+            "OPENROUTER_MODEL", "deepseek-v4.1-flash:free"
         )
     )
     openrouter_fallback_models: tuple[str, ...] = field(
         default_factory=lambda: (
             tuple(_str_list("OPENROUTER_FALLBACK_MODELS"))
             if "OPENROUTER_FALLBACK_MODELS" in os.environ
-            else ("nvidia/nemotron-3-super-120b-a12b:free",)
+            else ("mimo-v2.6-flash:free",)
         )
     )
 
     openrouter_base_url: str = field(
         default_factory=lambda: _str(
-            "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+            "OPENROUTER_BASE_URL", "https://tokenharbor.ai/v1"
         )
     )
     openrouter_app_name: str = field(
@@ -101,6 +101,18 @@ class Config:
     )
     max_retries: int = field(
         default_factory=lambda: _int("OPENROUTER_MAX_RETRIES", 2)
+    )
+
+    # Optional secondary provider (e.g. OpenRouter). When the primary provider
+    # is rate limited or errors out, the bot retries here automatically.
+    openrouter_secondary_base_url: str = field(
+        default_factory=lambda: _str("OPENROUTER_SECONDARY_BASE_URL")
+    )
+    openrouter_secondary_api_key: str = field(
+        default_factory=lambda: _str("OPENROUTER_SECONDARY_API_KEY")
+    )
+    openrouter_secondary_models: tuple[str, ...] = field(
+        default_factory=lambda: tuple(_str_list("OPENROUTER_SECONDARY_MODELS"))
     )
 
     allow_profanity: bool = field(
@@ -182,6 +194,14 @@ class Config:
     @property
     def ai_configured(self) -> bool:
         return bool(self.openrouter_api_key and self.openrouter_model)
+
+    @property
+    def secondary_configured(self) -> bool:
+        return bool(
+            self.openrouter_secondary_base_url
+            and self.openrouter_secondary_api_key
+            and self.openrouter_secondary_models
+        )
 
     @property
     def db_configured(self) -> bool:

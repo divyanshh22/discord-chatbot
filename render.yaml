@@ -13,10 +13,20 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: OPENROUTER_BASE_URL
+        value: https://tokenharbor.ai/v1
       - key: OPENROUTER_MODEL
-        value: openrouter/free
+        value: deepseek-v4.1-flash:free
       - key: OPENROUTER_FALLBACK_MODELS
+        value: mimo-v2.6-flash:free
+      - key: OPENROUTER_SECONDARY_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENROUTER_SECONDARY_API_KEY
+        sync: false
+      - key: OPENROUTER_SECONDARY_MODELS
         value: google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free
+      - key: DAILY_REQUEST_BUDGET
+        value: "2000"
       - key: DATABASE_URL
         sync: false
       - key: MENTION_REPLIES_ENABLED

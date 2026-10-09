@@ -40,7 +40,7 @@ control-room-ai/
 
 - Python **3.11+** (3.13.x is fine)
 - A Discord account with permission to create an application/bot
-- An [OpenRouter](https://www.openrouter.ai/) account with API credits
+- A [Token Harbor](https://tokenharbor.ai/) account (free tier works, no card needed)
 - A **PostgreSQL** database (local, or a hosted one like Render Postgres)
 - Access to your Discord server **Control Room** (where you'll add the bot)
 
@@ -75,12 +75,12 @@ control-room-ai/
 
 ---
 
-## 5. Get OpenRouter API Key and Choose a Model
+## 5. Get a Token Harbor API Key and Choose a Model
 
-1. Sign in to [OpenRouter](https://www.openrouter.ai/).
-2. Go to [Keys](https://www.openrouter.ai/keys) → create a new API key.
-3. (Optional but recommended) Set usage limits / per-key restrictions.
-4. Choose a model from [OpenRouter Models](https://www.openrouter.ai/models). Any general chat model works. The default is the free router `openrouter/free`, with free fallbacks (`OPENROUTER_FALLBACK_MODELS`) so the bot keeps working when a free model is rate-limited. Reasoning is disabled for fast, direct replies. You can change this anytime via `.env`.
+1. Sign in to [Token Harbor](https://tokenharbor.ai/).
+2. Open the dashboard → **API Keys** → create a new key.
+3. Open the **Models** page and switch to the **Free** filter to see the current `:free` model IDs.
+4. Choose a model from [OpenRouter Models](https://www.openrouter.ai/models). Any general chat model works. The defaults are `deepseek-v4.1-flash:free` with `mimo-v2.6-flash:free` as a fallback (free models are promotional and can change). Reasoning is disabled for fast, direct replies. You can change this anytime via `.env`.
 
 > Never share your OpenRouter key or Discord token. They are secrets and must stay in `.env` only.
 
@@ -120,9 +120,14 @@ Edit `.env` with a text editor (e.g. VS Code, Notepad++). Fill in at minimum:
 
 ```env
 DISCORD_BOT_TOKEN=your-discord-bot-token-here
-OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key-here
-OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
-OPENROUTER_FALLBACK_MODELS=
+OPENROUTER_API_KEY=your-tokenharbor-api-key-here
+OPENROUTER_MODEL=deepseek-v4.1-flash:free
+OPENROUTER_FALLBACK_MODELS=mimo-v2.6-flash:free
+OPENROUTER_BASE_URL=https://tokenharbor.ai/v1
+# Optional: auto-failover to OpenRouter when Token Harbor is rate limited
+OPENROUTER_SECONDARY_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_SECONDARY_API_KEY=your-openrouter-key-here
+OPENROUTER_SECONDARY_MODELS=google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free
 DATABASE_URL=postgresql://postgres:your-password@localhost:5432/discord-chatbot-ai
 ```
 
