@@ -185,15 +185,19 @@ class OpenRouterClient:
                     if resp.status == 429:
                         retry_after = _retry_after(resp)
                         last_error = OpenRouterError("Rate limited (429).")
+                        nxt = models[index + 1] if index + 1 < len(models) else None
                         log.warning(
-                            "OpenRouter rate limited; backing off %.1fs (attempt %d/%d).",
+                            "OpenRouter rate limited; backing off %.1fs (attempt %d/%d) for model %s.",
                             retry_after,
                             attempt,
                             max_attempts,
+                            model,
                         )
                         if attempt < max_attempts:
                             await asyncio.sleep(retry_after)
                             continue
+                        if nxt is not None:
+                            raise last_error
                         break
 
                     if 500 <= resp.status < 600:
