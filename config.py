@@ -68,11 +68,11 @@ class Config:
     openrouter_api_key: str = field(default_factory=lambda: _str("OPENROUTER_API_KEY"))
     openrouter_model: str = field(
         default_factory=lambda: _str(
-            "OPENROUTER_MODEL", "openrouter/free"
+            "OPENROUTER_MODEL", "google/gemma-4-31b-it:free"
         )
     )
     openrouter_fallback_models: tuple[str, ...] = field(
-        default_factory=lambda: tuple(_str_list("OPENROUTER_FALLBACK_MODELS"))
+        default_factory=lambda: tuple(_str_list("OPENROUTER_FALLBACK_MODELS", ["google/gemma-4-26b-a4b-it:free", "nvidia/nemotron-3.5-lightning:free"]))
     )
 
     openrouter_base_url: str = field(
