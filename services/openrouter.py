@@ -132,6 +132,10 @@ class OpenRouterClient:
     ) -> str:
         assert self._session is not None
         body = {**payload, "model": model}
+        body_without_reasoning = {
+            key: value for key, value in body.items() if key != "reasoning"
+        }
+        reasoning_stripped = False
 
         attempt = 0
         max_attempts = self._config.max_retries + 1
@@ -159,6 +163,24 @@ class OpenRouterClient:
                         break
 
                     raw = await _safe_text(resp)
+
+                    if (
+                        resp.status == 400
+                        and not reasoning_stripped
+                        and "reasoning" in raw.lower()
+                    ):
+                        reasoning_stripped = True
+                        body = dict(body_without_reasoning)
+                        body["max_tokens"] = max(
+                            int(body.get("max_tokens", 160)), 800
+                        )
+                        attempt -= 1
+                        log.warning(
+                            "Model %s requires reasoning; retrying without the "
+                            "reasoning flag.",
+                            model,
+                        )
+                        continue
 
                     if resp.status == 429:
                         retry_after = _retry_after(resp)
