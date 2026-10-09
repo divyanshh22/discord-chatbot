@@ -1,0 +1,23 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.Python
+
+# Data / runtime
+data/*.sqlite3
+data/*.sqlite3-journal
+data/*.db
+*.log
+
+# Editors / OS
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini

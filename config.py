@@ -1,0 +1,202 @@
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+
+load_dotenv(BASE_DIR / ".env", override=False)
+
+
+def _str(name: str, default: str = "") -> str:
+    value = os.getenv(name)
+    return value.strip() if value is not None else default
+
+
+def _int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return int(float(raw.strip()))
+    except ValueError:
+        return default
+
+
+def _float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        return float(raw.strip())
+    except ValueError:
+        return default
+
+
+def _bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+def _int_list(name: str) -> list[int]:
+    raw = os.getenv(name, "")
+    out: list[int] = []
+    for part in raw.replace(";", ",").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            out.append(int(part))
+        except ValueError:
+            continue
+    return out
+
+
+def _str_list(name: str) -> list[str]:
+    raw = os.getenv(name, "")
+    return [p.strip() for p in raw.replace(";", ",").split(",") if p.strip()]
+
+
+@dataclass(frozen=True)
+class Config:
+    discord_token: str = field(default_factory=lambda: _str("DISCORD_BOT_TOKEN"))
+    openrouter_api_key: str = field(default_factory=lambda: _str("OPENROUTER_API_KEY"))
+    openrouter_model: str = field(
+        default_factory=lambda: _str("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+    )
+
+    openrouter_base_url: str = field(
+        default_factory=lambda: _str(
+            "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+        )
+    )
+    openrouter_app_name: str = field(
+        default_factory=lambda: _str("OPENROUTER_APP_NAME", "Menace")
+    )
+    openrouter_app_url: str = field(
+        default_factory=lambda: _str("OPENROUTER_APP_URL", "")
+    )
+    temperature: float = field(
+        default_factory=lambda: _float("OPENROUTER_TEMPERATURE", 0.92)
+    )
+    max_tokens: int = field(
+        default_factory=lambda: _int("OPENROUTER_MAX_TOKENS", 220)
+    )
+    request_timeout: float = field(
+        default_factory=lambda: _float("OPENROUTER_TIMEOUT", 30.0)
+    )
+    max_retries: int = field(
+        default_factory=lambda: _int("OPENROUTER_MAX_RETRIES", 2)
+    )
+
+    allow_profanity: bool = field(
+        default_factory=lambda: _bool("ALLOW_PROFANITY", True)
+    )
+
+    mentions_enabled: bool = field(
+        default_factory=lambda: _bool("MENTION_REPLIES_ENABLED", True)
+    )
+    ai_channel_ids: list[int] = field(
+        default_factory=lambda: _int_list("AI_CHANNEL_IDS")
+    )
+    autonomous_channel_ids: list[int] = field(
+        default_factory=lambda: _int_list("AUTONOMOUS_CHANNEL_IDS")
+    )
+    blocked_channel_ids: list[int] = field(
+        default_factory=lambda: _int_list("BLOCKED_CHANNEL_IDS")
+    )
+    autonomous_enabled: bool = field(
+        default_factory=lambda: _bool("AUTONOMOUS_ENABLED", False)
+    )
+    autonomous_probability: float = field(
+        default_factory=lambda: _float("AUTONOMOUS_PROBABILITY", 0.08)
+    )
+    autonomous_min_messages: int = field(
+        default_factory=lambda: _int("AUTONOMOUS_MIN_MESSAGES", 3)
+    )
+
+    user_cooldown: float = field(
+        default_factory=lambda: _float("USER_COOLDOWN_SECONDS", 20.0)
+    )
+    global_cooldown: float = field(
+        default_factory=lambda: _float("GLOBAL_COOLDOWN_SECONDS", 4.0)
+    )
+    max_responses_per_minute: int = field(
+        default_factory=lambda: _int("MAX_RESPONSES_PER_MINUTE", 8)
+    )
+    daily_request_budget: int = field(
+        default_factory=lambda: _int("DAILY_REQUEST_BUDGET", 600)
+    )
+
+    context_messages: int = field(
+        default_factory=lambda: _int("CONTEXT_MESSAGES", 12)
+    )
+    context_char_budget: int = field(
+        default_factory=lambda: _int("CONTEXT_CHAR_BUDGET", 6000)
+    )
+    max_input_length: int = field(
+        default_factory=lambda: _int("MAX_INPUT_LENGTH", 1200)
+    )
+    max_reply_length: int = field(
+        default_factory=lambda: _int("MAX_REPLY_LENGTH", 900)
+    )
+    per_channel_history_cap: int = field(
+        default_factory=lambda: _int("PER_CHANNEL_HISTORY_CAP", 60)
+    )
+
+    admin_role_ids: list[int] = field(
+        default_factory=lambda: _int_list("ADMIN_ROLE_IDS")
+    )
+    admin_user_ids: list[int] = field(
+        default_factory=lambda: _int_list("ADMIN_USER_IDS")
+    )
+    log_channel_id: int = field(
+        default_factory=lambda: _int("LOG_CHANNEL_ID", 0)
+    )
+
+    dev_guild_id: int = field(default_factory=lambda: _int("DEV_GUILD_ID", 0))
+    db_path: Path = field(default_factory=lambda: DATA_DIR / "memory.sqlite3")
+
+    @property
+    def ai_configured(self) -> bool:
+        return bool(self.openrouter_api_key and self.openrouter_model)
+
+    def is_admin(self, user_id: int, role_ids: list[int] | None = None) -> bool:
+        if user_id in self.admin_user_ids:
+            return True
+        if role_ids:
+            return any(rid in self.admin_role_ids for rid in role_ids)
+        return False
+
+    def fatal_problems(self) -> list[str]:
+        problems: list[str] = []
+        if not self.discord_token:
+            problems.append("DISCORD_BOT_TOKEN is missing.")
+        return problems
+
+    def warnings(self) -> list[str]:
+        problems: list[str] = []
+        if not self.openrouter_api_key:
+            problems.append(
+                "OPENROUTER_API_KEY is missing - AI replies are disabled until "
+                "it is set."
+            )
+        if not self.openrouter_model:
+            problems.append("OPENROUTER_MODEL is missing.")
+        if not 0.0 <= self.autonomous_probability <= 1.0:
+            problems.append("AUTONOMOUS_PROBABILITY must be between 0 and 1.")
+        if self.max_tokens <= 0:
+            problems.append("OPENROUTER_MAX_TOKENS must be positive.")
+        return problems
+
+    def validate(self) -> list[str]:
+        return self.fatal_problems() + self.warnings()
+
+
+config = Config()

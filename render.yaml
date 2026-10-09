@@ -1,0 +1,23 @@
+services:
+  - type: worker
+    name: menace-discord-bot
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4o-mini
+      - key: MENTION_REPLIES_ENABLED
+        value: "true"
+      - key: AUTONOMOUS_ENABLED
+        value: "false"
+      - key: ALLOW_PROFANITY
+        value: "true"
