@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import sys
 from collections import OrderedDict
 
 import discord
+from aiohttp import web
 from discord.ext import commands
 
 from config import config
@@ -93,6 +95,25 @@ class ControlRoomBot(commands.Bot):
         await super().close()
 
 
+async def _start_health_server() -> web.AppRunner | None:
+    port_raw = os.getenv("PORT")
+    if not port_raw:
+        return None
+    app = web.Application()
+
+    async def _ok(request: web.Request) -> web.Response:
+        return web.Response(text="ok")
+
+    app.router.add_get("/", _ok)
+    app.router.add_get("/healthz", _ok)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", int(port_raw))
+    await site.start()
+    log.info("Health server listening on port %s", port_raw)
+    return runner
+
+
 async def main() -> None:
     fatal = config.fatal_problems()
     if fatal:
@@ -109,9 +130,14 @@ async def main() -> None:
             "The bot will start but will not generate replies until it is set."
         )
 
+    runner = await _start_health_server()
     bot = ControlRoomBot()
-    async with bot:
-        await bot.start(config.discord_token)
+    try:
+        async with bot:
+            await bot.start(config.discord_token)
+    finally:
+        if runner is not None:
+            await runner.cleanup()
 
 
 if __name__ == "__main__":
