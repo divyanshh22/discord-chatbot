@@ -14,9 +14,9 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
-        value: google/gemma-4-31b-it:free
+        value: openrouter/free
       - key: OPENROUTER_FALLBACK_MODELS
-        value: google/gemma-4-26b-a4b-it:free,openrouter/free
+        value: google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free
       - key: DATABASE_URL
         sync: false
       - key: MENTION_REPLIES_ENABLED

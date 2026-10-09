@@ -85,6 +85,7 @@ class OpenRouterClient:
             "max_tokens": (
                 self._config.max_tokens if max_tokens is None else max_tokens
             ),
+            "reasoning": {"enabled": False},
         }
 
         headers = {
@@ -143,9 +144,19 @@ class OpenRouterClient:
                     url, json=body, headers=headers
                 ) as resp:
                     if resp.status == 200:
-                        self._daily_count += 1
                         data = await resp.json()
-                        return self._extract_content(data)
+                        content = self._extract_content(data)
+                        if content:
+                            self._daily_count += 1
+                            return content
+                        last_error = OpenRouterError(
+                            "Empty completion from model."
+                        )
+                        log.warning(
+                            "Model %s returned empty content; trying fallback.",
+                            model,
+                        )
+                        break
 
                     raw = await _safe_text(resp)
 

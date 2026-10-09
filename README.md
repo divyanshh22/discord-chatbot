@@ -80,7 +80,7 @@ control-room-ai/
 1. Sign in to [OpenRouter](https://www.openrouter.ai/).
 2. Go to [Keys](https://www.openrouter.ai/keys) → create a new API key.
 3. (Optional but recommended) Set usage limits / per-key restrictions.
-4. Choose a model from [OpenRouter Models](https://www.openrouter.ai/models). Any general chat model works. The default is a free model, `google/gemma-4-31b-it:free`, with free fallbacks (`OPENROUTER_FALLBACK_MODELS`) so the bot keeps working when a free model is rate-limited. You can change this anytime via `.env`.
+4. Choose a model from [OpenRouter Models](https://www.openrouter.ai/models). Any general chat model works. The default is the free router `openrouter/free`, with free fallbacks (`OPENROUTER_FALLBACK_MODELS`) so the bot keeps working when a free model is rate-limited. Reasoning is disabled for fast, direct replies. You can change this anytime via `.env`.
 
 > Never share your OpenRouter key or Discord token. They are secrets and must stay in `.env` only.
 
@@ -121,8 +121,8 @@ Edit `.env` with a text editor (e.g. VS Code, Notepad++). Fill in at minimum:
 ```env
 DISCORD_BOT_TOKEN=your-discord-bot-token-here
 OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key-here
-OPENROUTER_MODEL=google/gemma-4-31b-it:free
-OPENROUTER_FALLBACK_MODELS=google/gemma-4-26b-a4b-it:free,openrouter/free
+OPENROUTER_MODEL=openrouter/free
+OPENROUTER_FALLBACK_MODELS=google/gemma-4-31b-it:free,google/gemma-4-26b-a4b-it:free
 DATABASE_URL=postgresql://postgres:your-password@localhost:5432/discord-chatbot-ai
 ```
 
