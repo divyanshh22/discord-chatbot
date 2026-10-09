@@ -34,9 +34,9 @@ def _now_ist() -> str:
 
 
 _FALLBACKS = [
-    "brain lag ho gaya, dobara bol 💀",
-    "net slow hai, dimaag ka. phir se try kar 😭",
-    "signal gaya bhai, ek minute 🫠",
+    "arre ruk, mera brain thoda lag kar raha hai - dobara bol 😅",
+    "hmm ek second, dimaag reconnect ho raha hai 💀",
+    "sorry bhai, mera net-brain slow hai - phir se likh 🫠",
 ]
 
 _ROAST_NUDGE = (
@@ -343,6 +343,21 @@ class ChatCog(commands.Cog):
 
         return reply, False
 
+    def _failure_reply(self, classification, user_id: int) -> str:
+        roast_optout = self.bot.memory.is_roast_optout(user_id)
+        clapback = (
+            config.allow_profanity
+            and not roast_optout
+            and not classification.wants_stop
+            and (
+                getattr(classification, "severe", False)
+                or classification.level in (Level.BANTER, Level.ROAST)
+            )
+        )
+        if clapback:
+            return ensure_profanity("", lang=classification.language)
+        return random.choice(_FALLBACKS)
+
     async def _respond(
         self, message: discord.Message, kind: str, classification
     ) -> None:
@@ -356,10 +371,13 @@ class ChatCog(commands.Cog):
         except OpenRouterError as exc:
             log.error("AI request failed: %s", exc)
             if kind == "direct" and self.bot.failure_backoff.should_notify():
-                await message.channel.send(
-                    random.choice(_FALLBACKS),
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
+                try:
+                    await message.channel.send(
+                        self._failure_reply(classification, message.author.id),
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
+                except discord.HTTPException:
+                    pass
             return
 
         if not reply or is_dup:

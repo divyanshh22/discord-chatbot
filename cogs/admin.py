@@ -131,7 +131,7 @@ class AdminCog(commands.Cog):
     async def ai_clear(self, interaction: discord.Interaction) -> None:
         await self.bot.memory.clear_user_all(interaction.user.id)
         await interaction.response.send_message(
-            "done, meri yaadein clear kar di teri. ab fresh start 🙂", ephemeral=True
+            "done - cleared your memory. fresh start bhai 🙂", ephemeral=True
         )
 
     @ai.command(
