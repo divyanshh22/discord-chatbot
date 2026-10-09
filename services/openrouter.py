@@ -229,10 +229,18 @@ class OpenRouterClient:
                         continue
 
                     if resp.status == 429:
-                        retry_after = _retry_after(resp)
                         last_error = OpenRouterError("Rate limited (429).")
+                        if has_fallback:
+                            log.warning(
+                                "Rate limited for model %s; switching to the "
+                                "next model/provider immediately.",
+                                model,
+                            )
+                            raise last_error
+                        retry_after = _retry_after(resp)
                         log.warning(
-                            "OpenRouter rate limited; backing off %.1fs (attempt %d/%d) for model %s.",
+                            "Rate limited; backing off %.1fs (attempt %d/%d) "
+                            "for model %s.",
                             retry_after,
                             attempt,
                             max_attempts,
@@ -241,14 +249,20 @@ class OpenRouterClient:
                         if attempt < max_attempts:
                             await asyncio.sleep(retry_after)
                             continue
-                        if has_fallback:
-                            raise last_error
                         break
 
                     if 500 <= resp.status < 600:
                         last_error = OpenRouterError(
                             f"OpenRouter server error ({resp.status})."
                         )
+                        if has_fallback:
+                            log.warning(
+                                "OpenRouter server error %s for model %s; "
+                                "switching to the next model/provider.",
+                                resp.status,
+                                model,
+                            )
+                            raise last_error
                         log.warning(
                             "OpenRouter server error %s (attempt %d/%d).",
                             resp.status,
