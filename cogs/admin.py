@@ -78,7 +78,7 @@ class AdminCog(commands.Cog):
             ai_state = "ON" if override else "OFF"
 
         embed = discord.Embed(
-            title="Menace — status",
+            title="Echo — status",
             color=discord.Color.green()
             if not m.get_bool_flag("kill_switch")
             else discord.Color.red(),

@@ -81,7 +81,7 @@ class Config:
         )
     )
     openrouter_app_name: str = field(
-        default_factory=lambda: _str("OPENROUTER_APP_NAME", "Menace")
+        default_factory=lambda: _str("OPENROUTER_APP_NAME", "Echo")
     )
     openrouter_app_url: str = field(
         default_factory=lambda: _str("OPENROUTER_APP_URL", "")

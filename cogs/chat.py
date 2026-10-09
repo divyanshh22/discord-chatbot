@@ -402,13 +402,13 @@ class ChatCog(commands.Cog):
     @app_commands.command(name="bothelp", description="Show what this bot can do.")
     async def bothelp(self, interaction: discord.Interaction) -> None:
         embed = discord.Embed(
-            title="Menace",
+            title="Echo",
             description="Ek funny, chill AI member. Koi command zaroori nahi - "
             "bas mujhe @mention karke baat karo, main reply kar dunga.",
             color=discord.Color.blurple(),
         )
         embed.add_field(
-            name="@Menace <message>",
+            name="@Echo <message>",
             value="Main trigger hone ka asli tareeka. koi slash command nahi chahiye.",
             inline=False,
         )

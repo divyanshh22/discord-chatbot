@@ -1,6 +1,6 @@
-# Menace — Discord Chat Bot
+# Echo — Discord Chat Bot
 
-A funny, human-like AI Discord community member named **Menace** for **Control Room**. The bot speaks natural Hinglish/Hindi/English, has adaptive humour, playful profanity in friendly banter, intelligent context-aware roasting, and strong guardrails (serious chat detection, kill switch, cost/budget controls, admin-only settings).
+A funny, human-like AI Discord community member named **Echo** for **Control Room**. The bot speaks natural Hinglish/Hindi/English, has adaptive humour, playful profanity in friendly banter, intelligent context-aware roasting, and strong guardrails (serious chat detection, kill switch, cost/budget controls, admin-only settings).
 
 This is a fully working implementation built with `discord.py` 2.x, `aiohttp`, `python-dotenv` and PostgreSQL.
 
@@ -131,12 +131,12 @@ Optional but useful:
 - `DEV_GUILD_ID` — if you set this, slash commands sync instantly to that guild only (great for testing). Leave 0 for global sync (can take up to 1 hour).
 - `DATABASE_URL` — PostgreSQL connection string (preferred, used as-is). On Render, point it at your Postgres instance.
 - `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` — fallback connection fields, used only when `DATABASE_URL` is empty. Defaults: `localhost`, `5432`, `postgres`, `discord-chatbot-ai`.
-- `MENTION_REPLIES_ENABLED` — default `true`. When on, `@Menace <message>` gets an automatic reply in any non-blocked channel.
+- `MENTION_REPLIES_ENABLED` — default `true`. When on, `@Echo <message>` gets an automatic reply in any non-blocked channel.
 - `AI_CHANNEL_IDS` — optional allowlist. Leave empty to allow mentions in **all** channels; if set, mentions only work in the listed channels.
 - `AUTONOMOUS_CHANNEL_IDS` — channels where the bot may also jump in **without** being mentioned. Empty = fully disabled.
 - `BLOCKED_CHANNEL_IDS` — channels the bot must never interact in.
 - `AUTONOMOUS_ENABLED` — master switch for normal-message (non-mention) replies. Default `false`.
-- `ALLOW_PROFANITY` — default `true`. When on, MENACE curses back (gaali) when abused/roasted, and replies are guaranteed to include a gaali if the model softens. Set `false` to keep it clean. If someone asks it to stop roasting them, that person is opted out automatically.
+- `ALLOW_PROFANITY` — default `true`. When on, ECHO curses back (gaali) when abused/roasted, and replies are guaranteed to include a gaali if the model softens. Set `false` to keep it clean. If someone asks it to stop roasting them, that person is opted out automatically.
 - `AUTONOMOUS_PROBABILITY` — default 0.08 (8% chance to jump in when autonomous is enabled).
 - `DAILY_REQUEST_BUDGET` — default 600. When reached, bot stops making AI calls gracefully.
 - `ADMIN_USER_IDS` / `ADMIN_ROLE_IDS` — users/roles allowed to change server-wide settings.
@@ -183,9 +183,9 @@ There is **no roast command** — roasting and gaali replies happen automaticall
 | `/ai kill <on\|off>` | Admin/Manage Guild | Global kill switch — instantly stops all AI replies. Great for emergencies. |
 
 Notes:
-- **No commands needed**: just `@Menace <your message>` in any permitted channel and it replies automatically.
+- **No commands needed**: just `@Echo <your message>` in any permitted channel and it replies automatically.
 - The bot reads the recent channel context and the tone of your message, then answers in kind (greeting, casual chat, witty comeback, savage roast, genuine help, or calm/supportive if the topic is serious).
-- **Gaali / roast back**: if you abuse, taunt or roast MENACE, it fires back with its own gaali/roast (guaranteed to include a gaali when `ALLOW_PROFANITY=true`).
+- **Gaali / roast back**: if you abuse, taunt or roast ECHO, it fires back with its own gaali/roast (guaranteed to include a gaali when `ALLOW_PROFANITY=true`).
 - Replies reference your triggering message.
 - Normal-message (non-mention) replies are **off by default**; enable them per server with `/ai autochat on` and per channel with `AUTONOMOUS_CHANNEL_IDS`.
 - The bot never replies to other bots or itself, won't answer the same message twice, and won't roast someone who is genuinely asking for help.
@@ -197,7 +197,7 @@ Notes:
 ## 9. Behaviour & Personality Notes
 
 - **Language mixing**: Hinglish/Hindi/English; matches speaker's vibe.
-- **Banter / clap-back**: if someone curses, taunts or roasts MENACE, it fires back with its own gaali/roast in the same language and energy (a notch sharper), but never escalates to credible threats or hate, and never drags in family or protected traits.
+- **Banter / clap-back**: if someone curses, taunts or roasts ECHO, it fires back with its own gaali/roast in the same language and energy (a notch sharper), but never escalates to credible threats or hate, and never drags in family or protected traits.
 - **Roast mode**: triggered automatically by "roast me" style messages (no command). Creative and personalised, not cruel.
 - **Serious mode**: detects distress/self-harm cues and drops jokes; stays calm and supportive.
 - **Memory**: short-term, bounded (per-channel ring buffer + PostgreSQL). Only minimal context sent to OpenRouter.
@@ -227,7 +227,7 @@ Notes:
 - **Secrets**: read only from `.env`. Never committed. `.gitignore` excludes `.env`, `__pycache__/`, logs.
 - **No credential leakage**: logs never print tokens/keys. HTTP errors are sanitised.
 - **Bounded memory**: history capped per channel; old messages dropped. `clear_user_all` wipes a user's messages and prefs.
-- **Roast opt-out**: per-user flag set automatically when someone asks MENACE to stop, and respected by the persona.
+- **Roast opt-out**: per-user flag set automatically when someone asks ECHO to stop, and respected by the persona.
 - **Hard blocks**: threats, hate, doxxing patterns blocked before sending to AI.
 - **Budget + kill switch**: guardrails against runaway cost/abuse.
 

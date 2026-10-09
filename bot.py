@@ -79,7 +79,7 @@ class ControlRoomBot(commands.Bot):
         await self.change_presence(
             status=discord.Status.online,
             activity=discord.Activity(
-                type=discord.ActivityType.watching, name="Menace 👀"
+                type=discord.ActivityType.watching, name="Echo 👀"
             ),
         )
 
