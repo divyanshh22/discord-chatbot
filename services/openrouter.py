@@ -20,6 +20,10 @@ class BudgetExceeded(OpenRouterError):
     pass
 
 
+class AuthenticationError(OpenRouterError):
+    pass
+
+
 class OpenRouterClient:
     def __init__(self, config: Config) -> None:
         self._config = config
@@ -74,7 +78,6 @@ class OpenRouterClient:
         assert self._session is not None
 
         payload: dict[str, Any] = {
-            "model": self._config.openrouter_model,
             "messages": list(messages),
             "temperature": (
                 self._config.temperature if temperature is None else temperature
@@ -94,6 +97,41 @@ class OpenRouterClient:
 
         url = f"{self._config.openrouter_base_url.rstrip('/')}/chat/completions"
 
+        models = [
+            self._config.openrouter_model,
+            *self._config.openrouter_fallback_models,
+        ]
+
+        last_error: Exception | None = None
+        for index, model in enumerate(models):
+            try:
+                return await self._request_model(url, headers, payload, model)
+            except AuthenticationError:
+                raise
+            except OpenRouterError as exc:
+                last_error = exc
+                nxt = models[index + 1] if index + 1 < len(models) else None
+                if nxt is None:
+                    break
+                log.warning(
+                    "Model %s failed (%s); trying fallback model %s.",
+                    model,
+                    exc,
+                    nxt,
+                )
+
+        raise last_error or OpenRouterError("OpenRouter request failed.")
+
+    async def _request_model(
+        self,
+        url: str,
+        headers: dict[str, str],
+        payload: dict[str, Any],
+        model: str,
+    ) -> str:
+        assert self._session is not None
+        body = {**payload, "model": model}
+
         attempt = 0
         max_attempts = self._config.max_retries + 1
         last_error: Exception | None = None
@@ -102,14 +140,14 @@ class OpenRouterClient:
             attempt += 1
             try:
                 async with self._session.post(
-                    url, json=payload, headers=headers
+                    url, json=body, headers=headers
                 ) as resp:
                     if resp.status == 200:
                         self._daily_count += 1
                         data = await resp.json()
                         return self._extract_content(data)
 
-                    body = await _safe_text(resp)
+                    raw = await _safe_text(resp)
 
                     if resp.status == 429:
                         retry_after = _retry_after(resp)
@@ -146,20 +184,24 @@ class OpenRouterClient:
                             "Check OPENROUTER_API_KEY.",
                             resp.status,
                         )
-                        raise OpenRouterError(
+                        raise AuthenticationError(
                             "Authentication failed; verify OPENROUTER_API_KEY."
                         )
 
                     if resp.status == 404:
-                        raise OpenRouterError(
+                        last_error = OpenRouterError(
                             "Model not found; check OPENROUTER_MODEL and "
                             "OPENROUTER_BASE_URL."
                         )
+                        log.warning(
+                            "OpenRouter model %s not found (404).", model
+                        )
+                        break
 
                     log.error(
                         "OpenRouter request failed with status %s: %s",
                         resp.status,
-                        body,
+                        raw,
                     )
                     last_error = OpenRouterError(
                         f"OpenRouter request failed ({resp.status})."

@@ -67,7 +67,12 @@ class Config:
     discord_token: str = field(default_factory=lambda: _str("DISCORD_BOT_TOKEN"))
     openrouter_api_key: str = field(default_factory=lambda: _str("OPENROUTER_API_KEY"))
     openrouter_model: str = field(
-        default_factory=lambda: _str("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+        default_factory=lambda: _str(
+            "OPENROUTER_MODEL", "google/gemma-4-31b-it:free"
+        )
+    )
+    openrouter_fallback_models: tuple[str, ...] = field(
+        default_factory=lambda: tuple(_str_list("OPENROUTER_FALLBACK_MODELS"))
     )
 
     openrouter_base_url: str = field(

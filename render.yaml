@@ -14,7 +14,9 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: OPENROUTER_MODEL
-        value: openai/gpt-4o-mini
+        value: google/gemma-4-31b-it:free
+      - key: OPENROUTER_FALLBACK_MODELS
+        value: google/gemma-4-26b-a4b-it:free,openrouter/free
       - key: DATABASE_URL
         sync: false
       - key: MENTION_REPLIES_ENABLED
