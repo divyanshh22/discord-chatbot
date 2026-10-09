@@ -35,7 +35,7 @@ def _now_ist() -> str:
 
 
 _FALLBACKS = [
-    "ek sec bhai, thoda reload ho raha hai 😅",
+    "ek sec bhai, thoda reload ho raha hai",
     "ruko ek second, dimaag sync kar raha hai",
     "chalo ek sec de do, net thoda der se connect hua",
 ]
