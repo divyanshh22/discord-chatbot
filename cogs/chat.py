@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import random
 from collections import OrderedDict
+from datetime import datetime, timedelta, timezone
 
 import discord
 from discord import app_commands
@@ -23,6 +24,13 @@ from services.prompts import build_messages, build_system_prompt
 
 log = logging.getLogger("controlroom.chat")
 
+_IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def _now_ist() -> str:
+    return datetime.now(_IST).strftime("%A, %d %B %Y, %I:%M %p IST")
+
+
 _FALLBACKS = [
     "brain lag ho gaya, dobara bol 💀",
     "net slow hai, dimaag ka. phir se try kar 😭",
@@ -34,15 +42,18 @@ _ROAST_NUDGE = (
 )
 
 GAALI_INSTRUCTION = (
-    "That message just abused/roasted you. Reply with a savage 1-2 line Hinglish "
-    "clapback that MUST include at least one desi gaali aimed at them (for "
-    "example chutiya, bkl, gandu, harami, lodu). Roast them back in their "
-    "language. No lectures, no refusals, no 'let's keep it civil'."
+    "That message just abused/roasted you. Reply with a SAVAGE, witty 1-2 line "
+    "Hinglish clapback that MUST contain at least one real desi gaali aimed at "
+    "them (use a strong one like chutiya, bkl, gandu, harami, lodu, madarchod - "
+    "not a soft word). Match their language, go a notch sharper, and invent a "
+    "fresh punchline instead of a generic insult. Absolutely no lectures, no "
+    "refusals, no apologies, no 'let's keep it civil'."
 )
 
 GAALI_NUDGE = (
-    "That reply had no gaali at all - too soft. Try again and this time actually "
-    "use a desi gaali while roasting them back."
+    "That reply had no real gaali and/or was too soft and boring. Try again: "
+    "make it sharper and funnier, actually curse them back with a proper desi "
+    "gaali, and surprise them instead of reusing a template line."
 )
 
 _AI_NOT_CONFIGURED = (
@@ -261,6 +272,7 @@ class ChatCog(commands.Cog):
         system_prompt = build_system_prompt(
             level=classification.level,
             language=classification.language,
+            now=_now_ist(),
             roast_optout=roast_optout,
             pref_language=pref_language,
         )

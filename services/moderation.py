@@ -66,6 +66,15 @@ _HELP_WEAK = [
     r"\bsyntax\b", r"\bstack\s?trace\b",
 ]
 
+_INFO = [
+    r"\bdate\b", r"\btareekh\b", r"\btaareekh\b",
+    r"\baaj\s+ka\s+din\b", r"\baaj\s+kons[ae]\s+din\b",
+    r"\bwhat(?:'s| is)?\s+the\s+(date|time|day)\b",
+    r"\btoday'?s?\s+(date|day)\b", r"\bcurrent\s+(date|time|day)\b",
+    r"\bwhat\s+time\b", r"\btime\s+kya\b", r"\bkitne\s+baje\b",
+    r"\bkya\s+(date|time|din)\b", r"\bwhich\s+day\b",
+]
+
 _STOP_REQUEST = [
     r"\bstop\b", r"\bband\s+kar\b", r"\bbas\s+kar\b", r"\bchup\b",
     r"\bshut\s+up\b", r"\bdon'?t\s+roast\b", r"\bmat\s+kar\b",
@@ -133,6 +142,7 @@ _TEASE_RE = _compile(_TEASE)
 _GREETING_RE = _compile(_GREETING)
 _HELP_STRONG_RE = _compile(_HELP_STRONG)
 _HELP_WEAK_RE = _compile(_HELP_WEAK)
+_INFO_RE = _compile(_INFO)
 _ABUSE_RE = _compile(_ABUSE)
 _STOP_RE = _compile(_STOP_REQUEST)
 _SERIOUS_RE = _compile(_SERIOUS)
@@ -210,8 +220,10 @@ def classify(text: str) -> Classification:
     wants_stop = _any(_STOP_RE, normalized)
     wants_roast = _any(_ROAST_RE, normalized) and not serious
 
-    help_intent = _any(_HELP_STRONG_RE, normalized) or (
-        _any(_HELP_WEAK_RE, normalized) and "?" in normalized
+    help_intent = (
+        _any(_HELP_STRONG_RE, normalized)
+        or _any(_INFO_RE, normalized)
+        or (_any(_HELP_WEAK_RE, normalized) and "?" in normalized)
     )
     greeting = _any(_GREETING_RE, normalized)
 
