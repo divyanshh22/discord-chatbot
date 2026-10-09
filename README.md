@@ -121,7 +121,7 @@ Edit `.env` with a text editor (e.g. VS Code, Notepad++). Fill in at minimum:
 ```env
 DISCORD_BOT_TOKEN=your-discord-bot-token-here
 OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key-here
-OPENROUTER_MODEL=meta-llama/llama-3.3-70b-instruct:free
+OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
 OPENROUTER_FALLBACK_MODELS=
 DATABASE_URL=postgresql://postgres:your-password@localhost:5432/discord-chatbot-ai
 ```

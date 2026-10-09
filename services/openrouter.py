@@ -106,7 +106,13 @@ class OpenRouterClient:
         last_error: Exception | None = None
         for index, model in enumerate(models):
             try:
-                return await self._request_model(url, headers, payload, model)
+                return await self._request_model(
+                    url,
+                    headers,
+                    payload,
+                    model,
+                    has_fallback=index + 1 < len(models),
+                )
             except AuthenticationError:
                 raise
             except OpenRouterError as exc:
@@ -129,6 +135,7 @@ class OpenRouterClient:
         headers: dict[str, str],
         payload: dict[str, Any],
         model: str,
+        has_fallback: bool = False,
     ) -> str:
         assert self._session is not None
         body = {**payload, "model": model}
@@ -185,7 +192,6 @@ class OpenRouterClient:
                     if resp.status == 429:
                         retry_after = _retry_after(resp)
                         last_error = OpenRouterError("Rate limited (429).")
-                        nxt = models[index + 1] if index + 1 < len(models) else None
                         log.warning(
                             "OpenRouter rate limited; backing off %.1fs (attempt %d/%d) for model %s.",
                             retry_after,
@@ -196,7 +202,7 @@ class OpenRouterClient:
                         if attempt < max_attempts:
                             await asyncio.sleep(retry_after)
                             continue
-                        if nxt is not None:
+                        if has_fallback:
                             raise last_error
                         break
 

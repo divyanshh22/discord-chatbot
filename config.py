@@ -68,14 +68,14 @@ class Config:
     openrouter_api_key: str = field(default_factory=lambda: _str("OPENROUTER_API_KEY"))
     openrouter_model: str = field(
         default_factory=lambda: _str(
-            "OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free"
+            "OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free"
         )
     )
     openrouter_fallback_models: tuple[str, ...] = field(
         default_factory=lambda: (
             tuple(_str_list("OPENROUTER_FALLBACK_MODELS"))
             if "OPENROUTER_FALLBACK_MODELS" in os.environ
-            else ("meta-llama/llama-3.3-70b-instruct:free",)
+            else ("nvidia/nemotron-3-super-120b-a12b:free",)
         )
     )
 
