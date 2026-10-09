@@ -35,9 +35,9 @@ def _now_ist() -> str:
 
 
 _FALLBACKS = [
-    "arre ruk, mera brain thoda lag kar raha hai - dobara bol 😅",
-    "hmm ek second, dimaag reconnect ho raha hai 💀",
-    "sorry bhai, mera net-brain slow hai - phir se likh 🫠",
+    "ek sec bhai, thoda reload ho raha hai 😅",
+    "ruko ek second, dimaag sync kar raha hai",
+    "chalo ek sec de do, net thoda der se connect hua",
 ]
 
 _ROAST_NUDGE = (
