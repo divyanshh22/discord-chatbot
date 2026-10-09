@@ -7,7 +7,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
 
 load_dotenv(BASE_DIR / ".env", override=False)
 
@@ -161,11 +160,23 @@ class Config:
     )
 
     dev_guild_id: int = field(default_factory=lambda: _int("DEV_GUILD_ID", 0))
-    db_path: Path = field(default_factory=lambda: DATA_DIR / "memory.sqlite3")
+
+    database_url: str = field(default_factory=lambda: _str("DATABASE_URL"))
+    pg_host: str = field(default_factory=lambda: _str("PGHOST", "localhost"))
+    pg_port: int = field(default_factory=lambda: _int("PGPORT", 5432))
+    pg_user: str = field(default_factory=lambda: _str("PGUSER", "postgres"))
+    pg_password: str = field(default_factory=lambda: _str("PGPASSWORD"))
+    pg_database: str = field(
+        default_factory=lambda: _str("PGDATABASE", "discord-chatbot-ai")
+    )
 
     @property
     def ai_configured(self) -> bool:
         return bool(self.openrouter_api_key and self.openrouter_model)
+
+    @property
+    def db_configured(self) -> bool:
+        return bool(self.database_url or self.pg_password)
 
     def is_admin(self, user_id: int, role_ids: list[int] | None = None) -> bool:
         if user_id in self.admin_user_ids:
@@ -193,6 +204,11 @@ class Config:
             problems.append("AUTONOMOUS_PROBABILITY must be between 0 and 1.")
         if self.max_tokens <= 0:
             problems.append("OPENROUTER_MAX_TOKENS must be positive.")
+        if not self.db_configured:
+            problems.append(
+                "PostgreSQL is not configured - memory persistence is disabled "
+                "until DATABASE_URL or PGPASSWORD is set."
+            )
         return problems
 
     def validate(self) -> list[str]:

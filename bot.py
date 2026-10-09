@@ -29,7 +29,7 @@ class ControlRoomBot(commands.Bot):
 
         self.config = config
         self.memory = MemoryService(
-            config.db_path, per_channel_cap=config.per_channel_history_cap
+            config, per_channel_cap=config.per_channel_history_cap
         )
         self.openrouter = OpenRouterClient(config)
         self.limiter = RateLimiter(config)

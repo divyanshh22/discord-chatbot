@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
-import tempfile
 import types
 from pathlib import Path
 
@@ -38,8 +37,7 @@ async def test_bot_tree() -> None:
 
 async def test_mention_defaults() -> None:
     b = botmod.ControlRoomBot()
-    tmp = Path(tempfile.mkdtemp()) / "mention.sqlite3"
-    b.memory = MemoryService(tmp, per_channel_cap=10)
+    b.memory = MemoryService(config, per_channel_cap=10)
     await b.memory.init()
     await b.load_extension("cogs.chat")
     mention, auto = b.chat_cog._channel_modes(123456789, 987654321)
@@ -157,8 +155,7 @@ class _FakeOpenRouter:
 
 async def test_gaali_enforcement() -> None:
     b = botmod.ControlRoomBot()
-    tmp = Path(tempfile.mkdtemp()) / "gaali.sqlite3"
-    b.memory = MemoryService(tmp, per_channel_cap=10)
+    b.memory = MemoryService(config, per_channel_cap=10)
     await b.memory.init()
     await b.load_extension("cogs.chat")
 
@@ -194,8 +191,7 @@ async def test_gaali_enforcement() -> None:
 
 
 async def test_memory() -> None:
-    tmp = Path(tempfile.mkdtemp()) / "m.sqlite3"
-    mem = MemoryService(tmp, per_channel_cap=3)
+    mem = MemoryService(config, per_channel_cap=3)
     await mem.init()
     for i in range(5):
         await mem.add_message(

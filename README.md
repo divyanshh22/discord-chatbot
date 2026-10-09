@@ -2,7 +2,7 @@
 
 A funny, human-like AI Discord community member named **Menace** for **Control Room**. The bot speaks natural Hinglish/Hindi/English, has adaptive humour, playful profanity in friendly banter, intelligent context-aware roasting, and strong guardrails (serious chat detection, kill switch, cost/budget controls, admin-only settings).
 
-This is a fully working implementation built with `discord.py` 2.x, `aiohttp`, `python-dotenv` and SQLite.
+This is a fully working implementation built with `discord.py` 2.x, `aiohttp`, `python-dotenv` and PostgreSQL.
 
 ---
 
@@ -26,14 +26,12 @@ control-room-ai/
 ├── services/
 │   ├── __init__.py
 │   ├── moderation.py   # Tone/language classification, duplicate detection, sanitisation
-│   ├── memory.py       # Bounded per-channel history, prefs, opt-out, guild/channel flags
+│   ├── memory.py       # PostgreSQL-backed history, prefs, opt-out, guild/channel flags
 │   ├── openrouter.py    # Async OpenRouter client: retries, 429/backoff, budget, timeouts
 │   ├── prompts.py       # Persona/system prompt builder + message formatter
 │   └── runtime.py      # Rate limits (user/global/minute), failure backoff
-├── tests/
-│   └── test_smoke.py   # Offline smoke tests (no network required)
-└── data/
-    └── .gitkeep        # SQLite DB goes here (ignored by git)
+└── tests/
+    └── test_smoke.py   # Offline smoke tests (no network required)
 ```
 
 ---
@@ -43,6 +41,7 @@ control-room-ai/
 - Python **3.11+** (3.13.x is fine)
 - A Discord account with permission to create an application/bot
 - An [OpenRouter](https://www.openrouter.ai/) account with API credits
+- A **PostgreSQL** database (local, or a hosted one like Render Postgres)
 - Access to your Discord server **Control Room** (where you'll add the bot)
 
 ---
@@ -123,11 +122,14 @@ Edit `.env` with a text editor (e.g. VS Code, Notepad++). Fill in at minimum:
 DISCORD_BOT_TOKEN=your-discord-bot-token-here
 OPENROUTER_API_KEY=sk-or-v1-your-openrouter-key-here
 OPENROUTER_MODEL=openai/gpt-4o-mini
+DATABASE_URL=postgresql://postgres:your-password@localhost:5432/discord-chatbot-ai
 ```
 
 Optional but useful:
 
 - `DEV_GUILD_ID` — if you set this, slash commands sync instantly to that guild only (great for testing). Leave 0 for global sync (can take up to 1 hour).
+- `DATABASE_URL` — PostgreSQL connection string (preferred, used as-is). On Render, point it at your Postgres instance.
+- `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` — fallback connection fields, used only when `DATABASE_URL` is empty. Defaults: `localhost`, `5432`, `postgres`, `discord-chatbot-ai`.
 - `MENTION_REPLIES_ENABLED` — default `true`. When on, `@Menace <message>` gets an automatic reply in any non-blocked channel.
 - `AI_CHANNEL_IDS` — optional allowlist. Leave empty to allow mentions in **all** channels; if set, mentions only work in the listed channels.
 - `AUTONOMOUS_CHANNEL_IDS` — channels where the bot may also jump in **without** being mentioned. Empty = fully disabled.
@@ -197,7 +199,7 @@ Notes:
 - **Banter / clap-back**: if someone curses, taunts or roasts MENACE, it fires back with its own gaali/roast in the same language and energy (a notch sharper), but never escalates to credible threats or hate, and never drags in family or protected traits.
 - **Roast mode**: triggered automatically by "roast me" style messages (no command). Creative and personalised, not cruel.
 - **Serious mode**: detects distress/self-harm cues and drops jokes; stays calm and supportive.
-- **Memory**: short-term, bounded (per-channel ring buffer + SQLite). Only minimal context sent to OpenRouter.
+- **Memory**: short-term, bounded (per-channel ring buffer + PostgreSQL). Only minimal context sent to OpenRouter.
 - **Anti-spam/cost**: per-user cooldown, global cooldown, per-minute cap, daily budget, duplicate detection, length caps.
 - **No identity dump**: doesn't call itself "an AI" unless directly asked; avoids generic chatbot phrases.
 
@@ -214,15 +216,14 @@ Notes:
 | Bot doesn't respond in channel | Channel not allowed | Use `/ai status` (admin) or add channel ID to `AI_CHANNEL_IDS`/`AUTONOMOUS_CHANNEL_IDS`. Check `BLOCKED_CHANNEL_IDS`. |
 | Rate limited (429) | Too many requests | Bot already retries with backoff. Consider increasing cooldowns or budget if persistent. |
 | Timeout/network errors | Slow/OpenRouter issue | Check internet; try different model. Bot falls back to a short offline message on direct queries if budget ok but API fails. |
-| SQLite errors on start | Permission/path issue | Ensure `data/` exists and is writable. The bot auto-creates `memory.sqlite3`. |
-| Commands fail with "Missing Permissions" | Inviting without correct scopes/permissions | Reinvite with `applications.commands` scope and required bot permissions. |
+| PostgreSQL connection errors | Bad `DATABASE_URL`/credentials or DB unreachable | Verify the connection string and credentials. The bot keeps running with in-memory state until the DB is reachable. || Commands fail with "Missing Permissions" | Inviting without correct scopes/permissions | Reinvite with `applications.commands` scope and required bot permissions. |
 | Autocomplete/ephemeral messages not working | Interaction expired | Commands respond quickly; retry if the network was slow. |
 
 ---
 
 ## 11. Security & Privacy
 
-- **Secrets**: read only from `.env`. Never committed. `.gitignore` excludes `.env`, `__pycache__/`, `data/*.sqlite3`, logs.
+- **Secrets**: read only from `.env`. Never committed. `.gitignore` excludes `.env`, `__pycache__/`, logs.
 - **No credential leakage**: logs never print tokens/keys. HTTP errors are sanitised.
 - **Bounded memory**: history capped per channel; old messages dropped. `clear_user_all` wipes a user's messages and prefs.
 - **Roast opt-out**: per-user flag set automatically when someone asks MENACE to stop, and respected by the persona.
@@ -279,9 +280,9 @@ If you prefer a manual setup instead of the Blueprint:
 - Add the env vars from `.env.example`.
 
 Notes:
-- The `data/` SQLite file lives on the worker's ephemeral disk; that's fine
-  because conversation memory is a bounded, short-term cache. Add a Render Disk
-  if you want it to survive restarts.
+- Set the `DATABASE_URL` env var to your PostgreSQL connection string
+  (Render Postgres provides one automatically). If it is missing or unreachable,
+  the bot still runs with in-memory state only.
 - **Discord Developer Portal → Bot → Privileged Gateway Intents → Message
   Content Intent must be ON.** Deployed bots with the intent off cannot read
   mentions and will appear dead.
