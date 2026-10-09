@@ -18,6 +18,7 @@ from services.moderation import (
     contains_sexual,
     ensure_profanity,
     is_weak_reply,
+    mirrors_insult,
     relevance_score,
     sanitize_reply,
 )
@@ -306,19 +307,32 @@ class ChatCog(commands.Cog):
         for instruction in extra_instructions:
             messages.append({"role": "user", "content": instruction})
 
+        user_text = ""
+        for entry in reversed(context):
+            if not entry.get("is_bot"):
+                user_text = entry.get("content", "")
+                break
+
         reply = await self.bot.openrouter.complete(messages)
         reply = sanitize_reply(reply, config.max_reply_length)
+        if not reply:
+            retry = await self.bot.openrouter.complete(messages)
+            reply = sanitize_reply(retry, config.max_reply_length)
 
-        if need_gaali and reply and is_weak_reply(reply):
+        if need_gaali and reply and (
+            is_weak_reply(reply) or mirrors_insult(user_text, reply)
+        ):
             stronger = build_messages(system_prompt + "\n" + GAALI_NUDGE, context)
             for instruction in extra_instructions:
                 stronger.append({"role": "user", "content": instruction})
             second = await self.bot.openrouter.complete(stronger)
             second = sanitize_reply(second, config.max_reply_length)
-            if second and not is_weak_reply(second):
+            if second and not is_weak_reply(second) and not mirrors_insult(
+                user_text, second
+            ):
                 reply = second
             else:
-                reply = ensure_profanity(reply, lang=classification.language)
+                reply = ensure_profanity("", lang=classification.language)
 
         if not reply:
             return "", False
@@ -335,8 +349,10 @@ class ChatCog(commands.Cog):
                 retry_messages.append({"role": "user", "content": instruction})
             retry = await self.bot.openrouter.complete(retry_messages)
             retry = sanitize_reply(retry, config.max_reply_length)
-            if need_gaali and retry and is_weak_reply(retry):
-                retry = ensure_profanity(retry, lang=classification.language)
+            if need_gaali and retry and (
+                is_weak_reply(retry) or mirrors_insult(user_text, retry)
+            ):
+                retry = ensure_profanity("", lang=classification.language)
             if retry and not self._duplicates.is_duplicate(retry):
                 return retry, False
             return reply, True
@@ -380,7 +396,17 @@ class ChatCog(commands.Cog):
                     pass
             return
 
-        if not reply or is_dup:
+        if not reply:
+            if kind == "direct" and self.bot.failure_backoff.should_notify():
+                try:
+                    await message.channel.send(
+                        self._failure_reply(classification, message.author.id),
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
+                except discord.HTTPException:
+                    pass
+            return
+        if is_dup:
             return
 
         allowed = discord.AllowedMentions.none()

@@ -344,8 +344,47 @@ class DuplicateTracker:
             self._recent.pop(0)
 
 
+_ACTION_RE = re.compile(r"(?<!\w)/[^/\n]{0,120}?/(?!\w)")
+_ACTION_STAR_RE = re.compile(r"\*[^*\n]{0,120}?\*")
+_META_RE = re.compile(
+    r"(user\s*safety|safety\s*:|content\s*policy|"
+    r"\bas an ai\b|\bi(?:'m| am) an ai\b|language model|"
+    r"\bi (?:can'?t|cannot|am unable|'?m unable) (?:assist|help|comply|do)|"
+    r"\bmoderation\b|\bflagged\b)",
+    re.IGNORECASE,
+)
+_SECOND_PERSON_RE = re.compile(
+    r"\b(tu|tum|tera|teri|tere|tujhe|tumhe|you|your|you'?re)\b", re.IGNORECASE
+)
+
+
+def _abuse_hits(text: str) -> set[str]:
+    hits: set[str] = set()
+    for pattern in _ABUSE_RE:
+        for match in pattern.finditer(text or ""):
+            hits.add(match.group(0).lower())
+    return hits
+
+
+def mirrors_insult(user_text: str, reply: str) -> bool:
+    if not user_text or not reply:
+        return False
+    hits = _abuse_hits(user_text)
+    if not hits:
+        return False
+    low = reply.lower()
+    if not any(h in low for h in hits):
+        return False
+    return bool(_SECOND_PERSON_RE.search(low))
+
+
 def sanitize_reply(text: str, max_length: int) -> str:
-    cleaned = re.sub(r"\s+", " ", (text or "").strip())
+    cleaned = text or ""
+    cleaned = _ACTION_RE.sub(" ", cleaned)
+    cleaned = _ACTION_STAR_RE.sub(" ", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    if not cleaned or _META_RE.search(cleaned):
+        return ""
     if len(cleaned) > max_length:
         cleaned = cleaned[: max_length - 1].rstrip() + "…"
     return cleaned
