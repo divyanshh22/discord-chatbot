@@ -80,7 +80,7 @@ control-room-ai/
 1. Sign in to [Token Harbor](https://tokenharbor.ai/).
 2. Open the dashboard → **API Keys** → create a new key.
 3. Open the **Models** page and switch to the **Free** filter to see the current `:free` model IDs.
-4. Choose a model from [OpenRouter Models](https://www.openrouter.ai/models). Any general chat model works. The defaults are `deepseek-v4.1-flash:free` with `mimo-v2.6-flash:free` as a fallback (free models are promotional and can change). Reasoning is disabled for fast, direct replies. You can change this anytime via `.env`.
+4. Choose a model from [OpenRouter Models](https://www.openrouter.ai/models). Any general chat model works. The defaults are `claude-haiku-5.5:free` with `mimo-v2.6-flash:free` as a fallback (free models are promotional and can change). Reasoning is disabled for fast, direct replies. You can change this anytime via `.env`.
 
 > Never share your OpenRouter key or Discord token. They are secrets and must stay in `.env` only.
 

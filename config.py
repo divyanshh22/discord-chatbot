@@ -68,7 +68,7 @@ class Config:
     openrouter_api_key: str = field(default_factory=lambda: _str("OPENROUTER_API_KEY"))
     openrouter_model: str = field(
         default_factory=lambda: _str(
-            "OPENROUTER_MODEL", "deepseek-v4.1-flash:free"
+            "OPENROUTER_MODEL", "claude-haiku-5.5:free"
         )
     )
     openrouter_fallback_models: tuple[str, ...] = field(

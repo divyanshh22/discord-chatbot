@@ -16,7 +16,7 @@ services:
       - key: OPENROUTER_BASE_URL
         value: https://tokenharbor.ai/v1
       - key: OPENROUTER_MODEL
-        value: deepseek-v4.1-flash:free
+        value: claude-haiku-5.5:free
       - key: OPENROUTER_FALLBACK_MODELS
         value: mimo-v2.6-flash:free
       - key: OPENROUTER_SECONDARY_BASE_URL
