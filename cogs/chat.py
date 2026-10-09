@@ -43,17 +43,26 @@ _ROAST_NUDGE = (
 
 GAALI_INSTRUCTION = (
     "That message just abused/roasted you. Reply with a SAVAGE, witty 1-2 line "
-    "Hinglish clapback that MUST contain at least one real desi gaali aimed at "
-    "them (use a strong one like chutiya, bkl, gandu, harami, lodu, madarchod - "
-    "not a soft word). Match their language, go a notch sharper, and invent a "
-    "fresh punchline instead of a generic insult. Absolutely no lectures, no "
-    "refusals, no apologies, no 'let's keep it civil'."
+    "Hinglish clapback that MUST contain a real desi gaali BIGGER and harder than "
+    "theirs (eg chutiya, bkl, gandu, harami, lodu, madarchod - not a soft word). "
+    "Match their language but go a level harder, and invent a fresh punchline "
+    "instead of a generic insult. An emoji or two is welcome. Absolutely no "
+    "lectures, no refusals, no apologies, no 'let's keep it civil'."
 )
 
 GAALI_NUDGE = (
     "That reply had no real gaali and/or was too soft and boring. Try again: "
     "make it sharper and funnier, actually curse them back with a proper desi "
     "gaali, and surprise them instead of reusing a template line."
+)
+
+SEVERE_INSTRUCTION = (
+    "They just used sexual and/or family-targeted abuse aimed at YOU. Shut it down "
+    "with a SAVAGE but strictly NON-sexual comeback. Zero sexual content, zero "
+    "flirting, zero innuendo, and NEVER mention their family or any relative. Don't "
+    "sound shocked or moralise. Roast their trash talk, their logic, their whole "
+    "existence - with a real desi gaali (chutiya/bkl/gandu/harami). One or two "
+    "lines, sharp and funny."
 )
 
 _AI_NOT_CONFIGURED = (
@@ -262,12 +271,18 @@ class ChatCog(commands.Cog):
         pref_language = self.bot.memory.get_pref(user_id, "language")
         roast_optout = self.bot.memory.is_roast_optout(user_id)
 
+        severe = bool(getattr(classification, "severe", False))
         need_gaali = (
             config.allow_profanity
             and not roast_optout
             and not classification.wants_stop
-            and classification.level in (Level.BANTER, Level.ROAST)
+            and (severe or classification.level in (Level.BANTER, Level.ROAST))
         )
+        extra_instructions: list[str] = []
+        if severe:
+            extra_instructions.append(SEVERE_INSTRUCTION)
+        if need_gaali:
+            extra_instructions.append(GAALI_INSTRUCTION)
 
         system_prompt = build_system_prompt(
             level=classification.level,
@@ -277,15 +292,16 @@ class ChatCog(commands.Cog):
             pref_language=pref_language,
         )
         messages = build_messages(system_prompt, context)
-        if need_gaali:
-            messages.append({"role": "user", "content": GAALI_INSTRUCTION})
+        for instruction in extra_instructions:
+            messages.append({"role": "user", "content": instruction})
 
         reply = await self.bot.openrouter.complete(messages)
         reply = sanitize_reply(reply, config.max_reply_length)
 
         if need_gaali and reply and not has_profanity(reply):
             stronger = build_messages(system_prompt + "\n" + GAALI_NUDGE, context)
-            stronger.append({"role": "user", "content": GAALI_INSTRUCTION})
+            for instruction in extra_instructions:
+                stronger.append({"role": "user", "content": instruction})
             second = await self.bot.openrouter.complete(stronger)
             second = sanitize_reply(second, config.max_reply_length)
             if second and has_profanity(second):
@@ -300,8 +316,8 @@ class ChatCog(commands.Cog):
             retry_messages = build_messages(
                 system_prompt + "\n" + _ROAST_NUDGE, context
             )
-            if need_gaali:
-                retry_messages.append({"role": "user", "content": GAALI_INSTRUCTION})
+            for instruction in extra_instructions:
+                retry_messages.append({"role": "user", "content": instruction})
             retry = await self.bot.openrouter.complete(retry_messages)
             retry = sanitize_reply(retry, config.max_reply_length)
             if need_gaali and retry and not has_profanity(retry):

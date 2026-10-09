@@ -85,7 +85,7 @@ class Config:
         default_factory=lambda: _float("OPENROUTER_TEMPERATURE", 0.92)
     )
     max_tokens: int = field(
-        default_factory=lambda: _int("OPENROUTER_MAX_TOKENS", 220)
+        default_factory=lambda: _int("OPENROUTER_MAX_TOKENS", 160)
     )
     request_timeout: float = field(
         default_factory=lambda: _float("OPENROUTER_TIMEOUT", 30.0)
@@ -143,7 +143,7 @@ class Config:
         default_factory=lambda: _int("MAX_INPUT_LENGTH", 1200)
     )
     max_reply_length: int = field(
-        default_factory=lambda: _int("MAX_REPLY_LENGTH", 900)
+        default_factory=lambda: _int("MAX_REPLY_LENGTH", 360)
     )
     per_channel_history_cap: int = field(
         default_factory=lambda: _int("PER_CHANNEL_HISTORY_CAP", 60)

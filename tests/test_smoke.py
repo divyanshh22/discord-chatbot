@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import random
 import sys
 import types
 from pathlib import Path
@@ -40,16 +41,18 @@ async def test_mention_defaults() -> None:
     b.memory = MemoryService(config, per_channel_cap=10)
     await b.memory.init()
     await b.load_extension("cogs.chat")
-    mention, auto = b.chat_cog._channel_modes(123456789, 987654321)
+    guild_id = random.randint(10**15, 9 * 10**15)
+    channel_id = random.randint(10**15, 9 * 10**15)
+    mention, auto = b.chat_cog._channel_modes(guild_id, channel_id)
     assert mention is True, (mention, auto)
     assert auto is False, (mention, auto)
 
-    await b.memory.set_channel_ai(123456789, 987654321, False)
-    mention, auto = b.chat_cog._channel_modes(123456789, 987654321)
+    await b.memory.set_channel_ai(guild_id, channel_id, False)
+    mention, auto = b.chat_cog._channel_modes(guild_id, channel_id)
     assert mention is False and auto is False
 
-    await b.memory.set_channel_ai(123456789, 987654321, True)
-    mention, auto = b.chat_cog._channel_modes(123456789, 987654321)
+    await b.memory.set_channel_ai(guild_id, channel_id, True)
+    mention, auto = b.chat_cog._channel_modes(guild_id, channel_id)
     assert mention is True and auto is True
     await b.memory.close()
     print("mention defaults OK")
@@ -111,7 +114,7 @@ def test_prompts() -> None:
         level=mod.Level.BANTER, language="hinglish"
     )
     assert "CLAP-BACK" in banter_prompt
-    assert "never refuse to retaliate" in banter_prompt.lower()
+    assert "war of words" in banter_prompt.lower()
     msgs = prompts.build_messages(
         "sys",
         [
