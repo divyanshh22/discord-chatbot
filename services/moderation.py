@@ -137,6 +137,13 @@ _SEXUAL = [
     r"\bgaand\b", r"\bgand\b", r"\braand\b", r"\bsex\b", r"\bpaani\s+nikaal\b",
 ]
 
+_FAMILY_WORDS = [
+    r"\bbehen\b", r"\bbahan\b", r"\bbehn\b", r"\bbahen\b", r"\bmaa\b", r"\bma\b",
+    r"\bmom\b", r"\bmother\b", r"\bsister\b", r"\bbhabhi\b", r"\bbiwi\b",
+    r"\bwife\b", r"\bbaap\b", r"\bbapu\b", r"\bpapa\b", r"\bdad\b",
+    r"\bdaddy\b", r"\bmummy\b", r"\bmotherfuck\w*", r"\bmaa[- ]?behen\b",
+]
+
 _DOXX = [
     r"\b\d{1,3}(\.\d{1,3}){3}\b",
     r"\bthe?i?r?\s+address\b", r"\bhome\s+address\b",
@@ -167,6 +174,7 @@ _SERIOUS_RE = _compile(_SERIOUS)
 _THREAT_RE = _compile(_THREAT)
 _HATE_RE = _compile(_HATE)
 _FAMILY_RE = _compile(_FAMILY)
+_FAMILY_WORDS_RE = _compile(_FAMILY_WORDS)
 _SEXUAL_RE = _compile(_SEXUAL)
 _DOXX_RE = _compile(_DOXX)
 _LECTURE_RE = _compile(_LECTURE)
@@ -199,6 +207,14 @@ def has_profanity(text: str) -> bool:
     if words & _MILD_PROFANITY:
         return True
     return _any(_ABUSE_RE, text)
+
+
+def contains_family(text: str) -> bool:
+    return _any(_FAMILY_RE, text) or _any(_FAMILY_WORDS_RE, text)
+
+
+def contains_sexual(text: str) -> bool:
+    return _any(_SEXUAL_RE, text)
 
 
 _GAALI_LINES = [
