@@ -182,17 +182,6 @@ class Config:
 
     dev_guild_id: int = field(default_factory=lambda: _int("DEV_GUILD_ID", 0))
 
-    # Voice / audio playback
-    voice_enabled: bool = field(
-        default_factory=lambda: _bool("VOICE_ENABLED", True)
-    )
-    audio_folder: str = field(
-        default_factory=lambda: _str("AUDIO_FOLDER", "audio")
-    )
-    ffmpeg_executable: str = field(
-        default_factory=lambda: _str("FFMPEG_EXECUTABLE", "ffmpeg")
-    )
-
     database_url: str = field(default_factory=lambda: _str("DATABASE_URL"))
     pg_host: str = field(default_factory=lambda: _str("PGHOST", "localhost"))
     pg_port: int = field(default_factory=lambda: _int("PGPORT", 5432))
@@ -217,11 +206,6 @@ class Config:
     @property
     def db_configured(self) -> bool:
         return bool(self.database_url or self.pg_password)
-
-    @property
-    def audio_dir(self) -> Path:
-        path = Path(self.audio_folder)
-        return path if path.is_absolute() else (BASE_DIR / path)
 
     def is_admin(self, user_id: int, role_ids: list[int] | None = None) -> bool:
         if user_id in self.admin_user_ids:

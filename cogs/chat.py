@@ -503,11 +503,6 @@ class ChatCog(commands.Cog):
             value="Ek joke sunao ya yes/no sawaal ka jawab lo.",
             inline=False,
         )
-        embed.add_field(
-            name="/audio play|list|stop|leave",
-            value="Voice channel me `audio/` folder se files bajao.",
-            inline=False,
-        )
         embed.set_footer(text="Mention karo ya reply karo, main aa jaunga.")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 

@@ -43,7 +43,6 @@ control-room-ai/
 - A [Token Harbor](https://tokenharbor.ai/) account (free tier works, no card needed)
 - A **PostgreSQL** database (local, or a hosted one like Render Postgres)
 - Access to your Discord server **Control Room** (where you'll add the bot)
-- **ffmpeg** on the host (only needed for the `/audio` voice feature)
 
 ---
 
@@ -176,7 +175,7 @@ If you see configuration errors, fix `.env` as instructed.
 
 ## 8. Commands
 
-Roasting and gaali replies also happen automatically through mentions. The slash commands below are for help, admin/config, fun extras, and audio.
+Roasting and gaali replies also happen automatically through mentions. The slash commands below are for help, admin/config, and fun extras.
 
 | Command | Who | Description |
 |---|---|---|
@@ -192,18 +191,6 @@ Roasting and gaali replies also happen automatically through mentions. The slash
 | `/compliment @user` | Anyone | Generate a genuine compliment. |
 | `/joke` | Anyone | Tell a short joke. |
 | `/8ball <question>` | Anyone | Yes/no answer from the magic 8-ball. |
-| `/audio play [name]` | Anyone (in voice) | Play a file from the `audio/` folder in your voice channel. |
-| `/audio list` | Anyone | List the files available in the `audio/` folder. |
-| `/audio stop` | Anyone | Stop the current audio. |
-| `/audio leave` | Anyone | Disconnect the bot from voice. |
-
-### Audio (`/audio`)
-
-1. Drop audio files (`.mp3`, `.m4a`, `.wav`, `.ogg`, `.opus`, `.flac`, `.aac`, `.webm`, `.mp4`) into the `audio/` folder at the project root.
-2. Join a voice channel, then run `/audio play` (pick a file or leave the name empty for a random one).
-3. The bot needs **Connect** + **Speak** permission in that voice channel.
-4. The host must have **ffmpeg** installed (`FFMPEG_EXECUTABLE`, default `ffmpeg`) and `PyNaCl` (already in `requirements.txt`).
-5. On Render the filesystem is ephemeral, so commit audio files to the repo to keep them after a redeploy.
 
 Notes:
 - **No commands needed** for chat: just `@Echo <your message>` in any permitted channel and it replies automatically.

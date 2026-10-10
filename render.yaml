@@ -3,7 +3,7 @@ services:
     name: echo-discord-bot
     runtime: python
     plan: starter
-    buildCommand: apt-get update && apt-get install -y --no-install-recommends ffmpeg libopus0 || true; pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
     autoDeploy: true
     envVars:
@@ -35,9 +35,3 @@ services:
         value: "false"
       - key: ALLOW_PROFANITY
         value: "true"
-      - key: VOICE_ENABLED
-        value: "true"
-      - key: AUDIO_FOLDER
-        value: audio
-      - key: FFMPEG_EXECUTABLE
-        value: ffmpeg

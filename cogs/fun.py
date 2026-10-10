@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import random
-from pathlib import Path
 
 import discord
 from discord import app_commands
@@ -13,18 +12,6 @@ from services.moderation import sanitize_reply
 from services.openrouter import BudgetExceeded, OpenRouterError
 
 log = logging.getLogger("controlroom.fun")
-
-_AUDIO_EXTENSIONS = {
-    ".mp3",
-    ".m4a",
-    ".wav",
-    ".ogg",
-    ".opus",
-    ".flac",
-    ".webm",
-    ".mp4",
-    ".aac",
-}
 
 _AI_UNAVAILABLE = "abhi dimaag set nahi hai bhai, thodi der baad try karo 🧠"
 
@@ -43,10 +30,6 @@ _EIGHT_BALL = [
 
 
 class FunCog(commands.Cog):
-    audio = app_commands.Group(
-        name="audio", description="Voice channel me audio files bajao."
-    )
-
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
@@ -87,166 +70,6 @@ class FunCog(commands.Cog):
             )
             return
         await interaction.followup.send(f"{prefix}{reply}")
-
-    # --------------------------------------------------------------- audio
-    def _audio_dir(self) -> Path:
-        folder = config.audio_dir
-        try:
-            folder.mkdir(parents=True, exist_ok=True)
-        except OSError:
-            pass
-        return folder
-
-    def _audio_files(self) -> list[Path]:
-        folder = config.audio_dir
-        if not folder.is_dir():
-            return []
-        files = [
-            f
-            for f in folder.iterdir()
-            if f.is_file() and f.suffix.lower() in _AUDIO_EXTENSIONS
-        ]
-        return sorted(files, key=lambda f: f.name.lower())
-
-    def _resolve_audio(self, name: str) -> Path | None:
-        folder = self._audio_dir().resolve()
-        candidate = (folder / name).resolve()
-        try:
-            candidate.relative_to(folder)
-        except ValueError:
-            return None
-        if candidate.is_file() and candidate.suffix.lower() in _AUDIO_EXTENSIONS:
-            return candidate
-        for f in self._audio_files():
-            if name.lower() in (f.name.lower(), f.stem.lower()):
-                return f
-        return None
-
-    async def _audio_ac(
-        self, interaction: discord.Interaction, current: str
-    ) -> list[app_commands.Choice[str]]:
-        cur = (current or "").lower()
-        choices: list[app_commands.Choice[str]] = []
-        for f in self._audio_files():
-            if cur in f.name.lower() or cur in f.stem.lower():
-                choices.append(app_commands.Choice(name=f.name, value=f.name))
-        return choices[:25]
-
-    @audio.command(name="list", description="Audio folder ki saari files dekho.")
-    async def audio_list(self, interaction: discord.Interaction) -> None:
-        files = self._audio_files()
-        if not files:
-            await interaction.response.send_message(
-                f"audio folder khali hai. `{config.audio_dir}` me files daalo "
-                "(.mp3/.wav/.ogg/.m4a/.flac).",
-                ephemeral=True,
-            )
-            return
-        listing = "\n".join(f"• {f.name}" for f in files[:50])
-        await interaction.response.send_message(
-            f"🎧 Available audio ({len(files)}):\n{listing}", ephemeral=True
-        )
-
-    @audio.command(name="play", description="Apni voice channel me audio bajao.")
-    @app_commands.describe(name="File ka naam (khali chhodo to random bajega).")
-    @app_commands.autocomplete(name=_audio_ac)
-    @app_commands.guild_only()
-    async def audio_play(
-        self, interaction: discord.Interaction, name: str | None = None
-    ) -> None:
-        if not config.voice_enabled:
-            await interaction.response.send_message(
-                "voice playback off hai.", ephemeral=True
-            )
-            return
-        member = interaction.user
-        if (
-            not isinstance(member, discord.Member)
-            or member.voice is None
-            or member.voice.channel is None
-        ):
-            await interaction.response.send_message(
-                "pehle kisi voice channel me join karo 🎧", ephemeral=True
-            )
-            return
-        channel = member.voice.channel
-
-        await interaction.response.defer()
-
-        files = self._audio_files()
-        if not files:
-            await interaction.followup.send(
-                f"audio folder khali hai. `{config.audio_dir}` me files daalo.",
-                ephemeral=True,
-            )
-            return
-
-        if name:
-            path = self._resolve_audio(name)
-            if path is None:
-                await interaction.followup.send(
-                    f"'{name}' naam ki audio nahi mili. `/audio list` dekho.",
-                    ephemeral=True,
-                )
-                return
-        else:
-            path = random.choice(files)
-
-        vc = interaction.guild.voice_client
-        try:
-            if vc is None:
-                vc = await channel.connect()
-            elif vc.channel != channel:
-                await vc.move_to(channel)
-        except Exception as exc:  # noqa: BLE001
-            log.error("voice connect failed: %s", exc)
-            await interaction.followup.send(
-                "voice channel me join nahi kar paya 😔 "
-                "(bot ko Connect + Speak permission chahiye).",
-                ephemeral=True,
-            )
-            return
-
-        if vc.is_playing():
-            vc.stop()
-        try:
-            source = discord.FFmpegPCMAudio(
-                str(path), executable=config.ffmpeg_executable
-            )
-            vc.play(source)
-        except Exception as exc:  # noqa: BLE001
-            log.error("voice play failed: %s", exc)
-            await interaction.followup.send(
-                "audio play nahi ho paya 😔 (host pe ffmpeg installed hona chahiye).",
-                ephemeral=True,
-            )
-            return
-
-        await interaction.followup.send(f"🎶 Playing `{path.name}` in {channel.mention}")
-
-    @audio.command(name="stop", description="Chal rahi audio rok do.")
-    @app_commands.guild_only()
-    async def audio_stop(self, interaction: discord.Interaction) -> None:
-        vc = interaction.guild.voice_client
-        if vc is not None and (vc.is_playing() or vc.is_paused()):
-            vc.stop()
-            await interaction.response.send_message("⏹️ stop kar diya.")
-        else:
-            await interaction.response.send_message(
-                "kuch chal nahi raha tha.", ephemeral=True
-            )
-
-    @audio.command(name="leave", description="Bot ko voice channel se nikaal do.")
-    @app_commands.guild_only()
-    async def audio_leave(self, interaction: discord.Interaction) -> None:
-        vc = interaction.guild.voice_client
-        if vc is not None:
-            await vc.disconnect()
-            await interaction.response.send_message("👋 voice channel se nikal gaya.")
-        else:
-            await interaction.response.send_message(
-                "main voice me hi nahi hoon.", ephemeral=True
-            )
 
     # ------------------------------------------------------------------ fun
     @app_commands.command(name="roast", description="Echo se kisi ko savage roast karwao.")
