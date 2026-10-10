@@ -107,14 +107,14 @@ def test_prompts() -> None:
     assert "ROAST MODE" in prompts.build_system_prompt(
         level=mod.Level.ROAST, language="hinglish"
     )
-    assert "genuinely want help" in prompts.build_system_prompt(
+    assert "HELP MODE" in prompts.build_system_prompt(
         level=mod.Level.HELP, language="hinglish"
     )
     banter_prompt = prompts.build_system_prompt(
         level=mod.Level.BANTER, language="hinglish"
     )
-    assert "CLAP-BACK" in banter_prompt
-    assert "war of words" in banter_prompt.lower()
+    assert "BANTER MODE" in banter_prompt
+    assert "comeback" in banter_prompt.lower()
     msgs = prompts.build_messages(
         "sys",
         [
