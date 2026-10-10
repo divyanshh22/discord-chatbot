@@ -191,6 +191,10 @@ Roasting and gaali replies also happen automatically through mentions. The slash
 | `/compliment @user` | Anyone | Generate a genuine compliment. |
 | `/joke` | Anyone | Tell a short joke. |
 | `/8ball <question>` | Anyone | Yes/no answer from the magic 8-ball. |
+| `/summarize [count]` | Anyone | AI TL;DR of the last N messages in the channel. |
+| `/translate <language> <text>` | Anyone | Translate text into any language. |
+| `/remind <time> <text>` | Anyone | Set a reminder (e.g. `10m`, `1h30m`, `2d`). |
+| `/ping` | Anyone | Bot gateway latency and AI provider status. |
 
 Notes:
 - **No commands needed** for chat: just `@Echo <your message>` in any permitted channel and it replies automatically.

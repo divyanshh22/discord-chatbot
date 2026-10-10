@@ -503,6 +503,26 @@ class ChatCog(commands.Cog):
             value="Ek joke sunao ya yes/no sawaal ka jawab lo.",
             inline=False,
         )
+        embed.add_field(
+            name="/summarize [count]",
+            value="Is channel ki recent chat ka TL;DR.",
+            inline=False,
+        )
+        embed.add_field(
+            name="/translate <language> <text>",
+            value="Kisi bhi language mein translate karo.",
+            inline=False,
+        )
+        embed.add_field(
+            name="/remind <time> <text>",
+            value="Time pe yaad dilana, jaise 10m, 1h30m, 2d.",
+            inline=False,
+        )
+        embed.add_field(
+            name="/ping",
+            value="Bot latency aur AI provider status.",
+            inline=False,
+        )
         embed.set_footer(text="Mention karo ya reply karo, main aa jaunga.")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 

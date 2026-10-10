@@ -41,7 +41,7 @@ class ControlRoomBot(commands.Bot):
     async def setup_hook(self) -> None:
         await self.memory.init()
         await self.openrouter.start()
-        for ext in ("cogs.chat", "cogs.admin", "cogs.fun"):
+        for ext in ("cogs.chat", "cogs.admin", "cogs.fun", "cogs.tools"):
             await self.load_extension(ext)
             log.info("Loaded extension %s", ext)
         await self._sync_commands()
