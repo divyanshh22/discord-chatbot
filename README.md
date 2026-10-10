@@ -43,6 +43,7 @@ control-room-ai/
 - A [Token Harbor](https://tokenharbor.ai/) account (free tier works, no card needed)
 - A **PostgreSQL** database (local, or a hosted one like Render Postgres)
 - Access to your Discord server **Control Room** (where you'll add the bot)
+- **ffmpeg** on the host (only needed for the `/audio` voice feature)
 
 ---
 
@@ -175,7 +176,7 @@ If you see configuration errors, fix `.env` as instructed.
 
 ## 8. Commands
 
-There is **no roast command** — roasting and gaali replies happen automatically through mentions. The remaining commands are only for help and admin/config.
+Roasting and gaali replies also happen automatically through mentions. The slash commands below are for help, admin/config, fun extras, and audio.
 
 | Command | Who | Description |
 |---|---|---|
@@ -186,9 +187,26 @@ There is **no roast command** — roasting and gaali replies happen automaticall
 | `/ai clear` | Anyone | Clear your stored conversational memory (messages + prefs). |
 | `/ai autochat <on\|off>` | Admin/Manage Guild | Toggle spontaneous (autonomous) participation for the entire server. |
 | `/ai kill <on\|off>` | Admin/Manage Guild | Global kill switch — instantly stops all AI replies. Great for emergencies. |
+| `/roast @user` | Anyone | Generate a savage (but playful) roast of a member. |
+| `/wish @user <occasion>` | Anyone | Generate a warm wish for a birthday/promotion/etc. |
+| `/compliment @user` | Anyone | Generate a genuine compliment. |
+| `/joke` | Anyone | Tell a short joke. |
+| `/8ball <question>` | Anyone | Yes/no answer from the magic 8-ball. |
+| `/audio play [name]` | Anyone (in voice) | Play a file from the `audio/` folder in your voice channel. |
+| `/audio list` | Anyone | List the files available in the `audio/` folder. |
+| `/audio stop` | Anyone | Stop the current audio. |
+| `/audio leave` | Anyone | Disconnect the bot from voice. |
+
+### Audio (`/audio`)
+
+1. Drop audio files (`.mp3`, `.m4a`, `.wav`, `.ogg`, `.opus`, `.flac`, `.aac`, `.webm`, `.mp4`) into the `audio/` folder at the project root.
+2. Join a voice channel, then run `/audio play` (pick a file or leave the name empty for a random one).
+3. The bot needs **Connect** + **Speak** permission in that voice channel.
+4. The host must have **ffmpeg** installed (`FFMPEG_EXECUTABLE`, default `ffmpeg`) and `PyNaCl` (already in `requirements.txt`).
+5. On Render the filesystem is ephemeral, so commit audio files to the repo to keep them after a redeploy.
 
 Notes:
-- **No commands needed**: just `@Echo <your message>` in any permitted channel and it replies automatically.
+- **No commands needed** for chat: just `@Echo <your message>` in any permitted channel and it replies automatically.
 - The bot reads the recent channel context and the tone of your message, then answers in kind (greeting, casual chat, witty comeback, savage roast, genuine help, or calm/supportive if the topic is serious).
 - **Gaali / roast back**: if you abuse, taunt or roast ECHO, it fires back with its own gaali/roast (guaranteed to include a gaali when `ALLOW_PROFANITY=true`).
 - Replies reference your triggering message.

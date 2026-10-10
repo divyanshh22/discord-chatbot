@@ -483,6 +483,31 @@ class ChatCog(commands.Cog):
             value="Sab AI replies turant band karo (admins).",
             inline=False,
         )
+        embed.add_field(
+            name="/roast @user",
+            value="Echo se kisi ko savage roast karwao.",
+            inline=False,
+        )
+        embed.add_field(
+            name="/wish @user <occasion>",
+            value="Kisi ko birthday/promotion pe wish karwao.",
+            inline=False,
+        )
+        embed.add_field(
+            name="/compliment @user",
+            value="Kisi ko genuine compliment do.",
+            inline=False,
+        )
+        embed.add_field(
+            name="/joke  |  /8ball <sawaal>",
+            value="Ek joke sunao ya yes/no sawaal ka jawab lo.",
+            inline=False,
+        )
+        embed.add_field(
+            name="/audio play|list|stop|leave",
+            value="Voice channel me `audio/` folder se files bajao.",
+            inline=False,
+        )
         embed.set_footer(text="Mention karo ya reply karo, main aa jaunga.")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
